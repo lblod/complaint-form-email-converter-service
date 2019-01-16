@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Microservice that converts complaint forms to emails",
   "dependencies": {
-    "cron": "^1.5.1",
+    "cron": "^1.5.1"
   },
   "main": "app.js",
   "scripts": {

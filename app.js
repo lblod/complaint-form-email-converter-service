@@ -1,27 +1,33 @@
-import { app, query, errorHandler } from 'mu';
+import { app, errorHandler } from 'mu';
+import { CronJob } from 'cron';
+import {
+  fetchFormsToBeConverted
+} from './support';
+import request from 'request';
 
-app.get('/', function( req, res ) {
-  res.send('Hello mu-javascript-template');
-} );
+const cronFrequency = process.env.COMPLAINT_FORM_CRON_PATTERN || '*/1 * * * *';
+const complaintFormGraph = process.env.COMPLAINT_FORM_GRAPH || 'http://mu.semte.ch/application'
 
+app.get('/', async function(req, res) {
+  res.send('Hello from complaint-form-email-converter-service');
+});
 
-app.get('/query', function( req, res ) {
-  var myQuery = `
-    SELECT *
-    WHERE {
-      GRAPH <http://mu.semte.ch/application> {
-        ?s ?p ?o.
-      }
-    }`;
+new CronJob(cronFrequency, function() {
+  console.log(`Complaint form to email conversion triggered by cron job at ${new Date().toISOString()}`);
+  request.patch('http://localhost/complaint-form-email-converter/');
+}, null, true);
 
-  query( myQuery )
-    .then( function(response) {
-      res.send( JSON.stringify( response ) );
-    })
-    .catch( function(err) {
-      res.send( "Oops something went wrong: " + JSON.stringify( err ) );
-    });
-} );
+app.patch('/complaint-form-email-converter/', async function(req, res, next) {
+  try {
+    const forms = await fetchFormsToBeConverted(complaintFormGraph);
+    if (forms.length == 0) {
+      console.log(`No forms found that need to be converted`);
+      return res.status(204).end();
+    }
+    console.log(`Found ${forms.length} forms to convert`);
+  } catch (e) {
+    return next(new Error(e.message));
+  }
+});
 
 app.use(errorHandler);
-

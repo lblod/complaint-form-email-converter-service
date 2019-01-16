@@ -19,7 +19,10 @@ services:
 
 ### Environment variables
 
-To be completed
+```
+COMPLAINT_FORM_CRON_PATTERN: optional, default '*/1 * * * * *'
+COMPLAINT_FORM_GRAPH: optional, default 'http://mu.semte.ch/application'
+```
 
 ### Development
 
