@@ -256,10 +256,6 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
       ${form.content}
     </div><br>
 
-    !!!!!! GERER LA LISTE !!!!!!
-
-
-
     <p style="font-weight:bold;">Bijlagen</p>
     <ul>
       ${attachmentsHtml}
@@ -282,9 +278,42 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
   return email;
 };
 
+/**
+ * Set emails to mailbox
+ */
+const setEmailToMailbox = async function(email, emailGraph, mailbox) {
+  const result = await query(`
+    PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/03/22/nie#>
+    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+
+    INSERT {
+       GRAPH ${sparqlEscapeUri(emailGraph)} {
+           ?email a nmo:Email;
+               <http://mu.semte.ch/vocabularies/core/uuid> "${(email.uuid)}";
+               nmo:messageFrom "${(email.from)}";
+               nmo:emailTo "${(email.to)}";
+               nmo:messageSubject "${(email.subject)}";
+               nmo:plainTextMessageContent """${(email.plainTextContent)}""";
+               nmo:htmlMessageContent """${(email.htmlContent)}""";
+               nmo:sentDate "${moment().format()}";
+               nmo:isPartOf ?mailfolder.
+        }
+    }
+    WHERE {
+      GRAPH ${sparqlEscapeUri(emailGraph)} {
+            ?mailfolder a nfo:Folder;
+                nie:title  ${sparqlEscapeString(mailbox)}.
+            BIND(IRI(CONCAT("http://data.lblod.info/id/emails/", "${(email.uuid)}")) AS ?email)
+        }
+    }
+  `);
+};
+
 export {
   fetchFormsToBeConverted,
   fetchFormAttachments,
   createSenderEmail,
-  createReceiverEmail
+  createReceiverEmail,
+  setEmailToMailbox
 };
