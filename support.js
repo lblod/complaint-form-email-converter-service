@@ -58,6 +58,8 @@ const fetchFormsToBeConverted = async function(complaintFormGraph) {
           BIND('-' as ?defaultTelephone).
           OPTIONAL { ?complaintForm schema:telephone ?optionalTelephone }.
           BIND(coalesce(?optionalTelephone, ?defaultTelephone) as ?telephone).
+
+          FILTER NOT EXISTS {{ ?complaintForm ext:isConvertedIntoEmail ?email. }}
         }
     }
   `);
@@ -310,10 +312,38 @@ const setEmailToMailbox = async function(email, emailGraph, mailbox) {
   `);
 };
 
+/**
+ * Set the form as converted to avoid re-converting it indefinitely
+ */
+const setFormAsConverted = async function(complaintFormGraph, emailGraph, formUuid, emailUuid) {
+  const result = await query(`
+    PREFIX schema: <http://schema.org/>
+    PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+    INSERT {
+        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+            ?form ext:isConvertedIntoEmail ?email.
+        }
+    }
+    WHERE {
+        GRAPH ${sparqlEscapeUri(emailGraph)} {
+            ?email a nmo:Email;
+               <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(emailUuid)}.
+        }
+        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+            ?form a ext:ComplaintForm;
+                <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(formUuid)}.
+        }
+    }
+  `);
+}
+
 export {
   fetchFormsToBeConverted,
   fetchFormAttachments,
   createSenderEmail,
   createReceiverEmail,
-  setEmailToMailbox
+  setEmailToMailbox,
+  setFormAsConverted
 };

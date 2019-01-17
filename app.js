@@ -5,7 +5,8 @@ import {
   fetchFormAttachments,
   createSenderEmail,
   createReceiverEmail,
-  setEmailToMailbox
+  setEmailToMailbox,
+  setFormAsConverted
 } from './support';
 import request from 'request';
 
@@ -46,6 +47,10 @@ app.patch('/complaint-form-email-converter/', async function(req, res, next) {
       console.log(`Inserting emails to mailbox "${mailbox}"`);
       setEmailToMailbox(senderEmail, emailGraph, mailbox);
       setEmailToMailbox(receiverEmail, emailGraph, mailbox);
+
+      console.log(`Setting form ${form.uuid} to "converted"`);
+      setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid)
+      setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid)
     }));
   } catch (e) {
     return next(new Error(e.message));
