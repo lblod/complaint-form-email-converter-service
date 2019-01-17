@@ -14,6 +14,7 @@ services:
   complaint-form-email-converter-service:
     image: lblod/complain-form-email-converter-service
     environment:
+      COMPLAINT_FORM_GRAPH: "http://graph.uri"
       [...]
 ```
 
@@ -22,6 +23,10 @@ services:
 ```
 COMPLAINT_FORM_CRON_PATTERN: optional, default '*/1 * * * * *'
 COMPLAINT_FORM_GRAPH: optional, default 'http://mu.semte.ch/application'
+FILE_GRAPH: optional, default 'http://mu.semte.ch/application'
+EMAIL_FROM_ADDRESS: optional, default 'noreply-binnenland@vlaanderen.be'
+EMAIL_TO_ADDRESS: optional, default 'binnenland@vlaanderen.be'
+FILE_DOWNLOAD_PREFIX: optonal, default 'localhost'
 ```
 
 ### Development
