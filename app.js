@@ -37,20 +37,26 @@ app.patch('/complaint-form-email-converter/', async function(req, res, next) {
     console.log(`Found ${forms.length} forms to convert`);
 
     Promise.all(forms.map(async (form) => {
-      console.log(`Fetching attachments for form ${form.uuid}`);
-      const attachments = await fetchFormAttachments(complaintFormGraph, fileGraph, form.uuid);
+      try {
+        console.log(`Fetching attachments for form ${form.uuid}`);
+        const attachments = await fetchFormAttachments(complaintFormGraph, fileGraph, form.uuid);
 
-      console.log(`Creating emails for form ${form.uuid}`);
-      const senderEmail = createSenderEmail(form, attachments, fromAddress);
-      const receiverEmail = createReceiverEmail(form, attachments, fromAddress, toAddress);
+        console.log(`Creating emails for form ${form.uuid}`);
+        const senderEmail = createSenderEmail(form, attachments, fromAddress);
+        const receiverEmail = createReceiverEmail(form, attachments, fromAddress, toAddress);
 
-      console.log(`Inserting emails to mailbox "${mailbox}"`);
-      setEmailToMailbox(senderEmail, emailGraph, mailbox);
-      setEmailToMailbox(receiverEmail, emailGraph, mailbox);
+        console.log(`Inserting emails to mailbox "${mailbox}"`);
+        setEmailToMailbox(senderEmail, emailGraph, mailbox);
+        setEmailToMailbox(receiverEmail, emailGraph, mailbox);
 
-      console.log(`Setting form ${form.uuid} to "converted"`);
-      setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid)
-      setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid)
+        console.log(`Setting form ${form.uuid} to "converted"`);
+        setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid);
+        setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid);
+
+        console.log(`End of processing form ${form.uuid}`);
+      } catch(e) {
+        console.log(`An error has occured while processing form ${form.uuid}: ${e.message}`)
+      }
     }));
   } catch (e) {
     return next(new Error(e.message));

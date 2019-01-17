@@ -84,22 +84,27 @@ const fetchFormAttachments = async function(complaintFormGraph, fileGraph, formU
     WHERE {
         GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
           ?complaintForm a ext:ComplaintForm;
-              <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(formUuid)}.
-
-          BIND('' as ?defaultAttachments).
-          OPTIONAL { ?complaintForm nmo:hasAttachment ?optionalAttachments }.
-          BIND(coalesce(?optionalAttachments, ?defaultAttachments) as ?attachment).
+              <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(formUuid)};
+              nmo:hasAttachment ?attachment.
         }
         GRAPH <${fileGraph}> {
             ?attachment nfo:fileName ?filename;
                   <http://mu.semte.ch/vocabularies/core/uuid> ?uuid.
-            ?file nie:dataSource ?uploadFile;
+            ?file nie:dataSource ?attachment;
                   dcterms:format ?format;
                   nfo:fileSize ?size.
         }
     }
   `);
   return parseResult(result);
+};
+
+const humanReadableSize = function(size) {
+  const bytes = size;
+  const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes == 0) return '0 byte';
+  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+  return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 };
 
 const createSenderEmail = function(form, attachments, fromAddress) {
@@ -116,7 +121,7 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   var attachmentsPlainText = '';
   attachments.map((attachment) => {
     const downloadLink = `${fileDownloadPrefix}/files/${attachment.uuid}/download?name=${attachment.filename}`;
-    const formattedAttachment = `${attachment.filename} (${attachment.size})`;
+    const formattedAttachment = `${attachment.filename} (${humanReadableSize(attachment.size)})`;
     attachmentsHtml += `<li><a href="${downloadLink}" target="_blank">${formattedAttachment}</a></li>\n\t`;
     attachmentsPlainText += `${formattedAttachment} (${downloadLink})\n\t`;
   });
@@ -125,8 +130,8 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   Geachte ${senderName}
   Het Agentschap Binnenlands Bestuur Vlaanderen heeft uw klacht goed ontvangen:
 
-  Beveiligd verzonden: ${senderName}, ${moment(form.created).format("DD/MM/YY hh:mm")}
-  Ontvangen: Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY hh:mm")}
+  Beveiligd verzonden: ${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}
+  Ontvangen: Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY HH:mm")}
   Naam: ${senderName}
   Contactpersoon indien vereniging: ${form.contactPersonName}
   Straat: ${form.street}
@@ -153,8 +158,8 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   <p>Geachte ${senderName}</p><br>
   <p>Het Agentschap Binnenlands Bestuur Vlaanderen heeft uw klacht goed ontvangen:</p><br>
   <div style="margin-left: 40px;">
-    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY hh:mm")}/span></p>
-    <p><span style="font-weight:bold;">Ontvangen:&nbsp;</span><span>Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY hh:mm")}</span></p><br><br>
+    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}/span></p>
+    <p><span style="font-weight:bold;">Ontvangen:&nbsp;</span><span>Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY HH:mm")}</span></p><br><br>
     <p><span style="font-weight:bold;">Naam:&nbsp;</span><span>${senderName}</span></p>
     <p><span style="font-weight:bold;">Contactpersoon indien vereniging:&nbsp;</span><span>${form.contactPersonName}</span></p><br>
     <p><span style="font-weight:bold;">Straat:&nbsp;</span><span>${form.street}</span></p>
@@ -182,7 +187,7 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   const email = {
     uuid: uuidv4(),
     from: fromAddress,
-    to: form.email,
+    to: form.senderEmail,
     subject: subject,
     plainTextContent: plainTextContent,
     htmlContent: htmlContent
@@ -205,7 +210,7 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
   var attachmentsPlainText = '';
   attachments.map((attachment) => {
     const downloadLink = `${fileDownloadPrefix}/files/${attachment.uuid}/download?name=${attachment.filename}`;
-    const formattedAttachment = `${attachment.filename} (${attachment.size})`;
+    const formattedAttachment = `${attachment.filename} (${humanReadableSize(attachment.size)})`;
     attachmentsHtml += `<li><a href="${downloadLink}" target="_blank">${formattedAttachment}</a></li>\n\t`;
     attachmentsPlainText += `${formattedAttachment} (${downloadLink})\n\t`;
   });
@@ -214,8 +219,8 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
   Geachte
   Er werd een klacht ingediend bij het Agentschap Binnenlands Bestuur via het Digitaal Klachtenformulier. Hieronder vindt u de inhoud van de klacht en de gegevens van klager
 
-    Beveiligd verzonden: ${senderName}, ${moment(form.created).format("DD/MM/YY hh:mm")}
-    Ontvangen: Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY hh:mm")}
+    Beveiligd verzonden: ${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}
+    Ontvangen: Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY HH:mm")}
     Naam: ${form.name}
     Contactpersoon indien vereniging: ${form.contactPersonName}
     Straat: ${form.street}
@@ -242,8 +247,8 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
   <p>Geachte</p><br>
   <p>Er werd een klacht ingediend bij het Agentschap Binnenlands Bestuur via het Digitaal Klachtenformulier. Hieronder vindt u de inhoud van de klacht en de gegevens van klager</p><br>
   <div style="margin-left: 40px;">
-    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY hh:mm")}</span></p>
-    <p><span style="font-weight:bold;">Ontvangen:&nbsp;</span><span>Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY hh:mm")}</span></p><br><br>
+    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}</span></p>
+    <p><span style="font-weight:bold;">Ontvangen:&nbsp;</span><span>Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY HH:mm")}</span></p><br><br>
     <p><span style="font-weight:bold;">Naam:&nbsp;</span><span>${form.name}</span></p>
     <p><span style="font-weight:bold;">Contactpersoon indien vereniging:&nbsp;</span><span>${form.contactPersonName}</span></p><br>
     <p><span style="font-weight:bold;">Straat:&nbsp;</span><span>${form.street}</span></p>
