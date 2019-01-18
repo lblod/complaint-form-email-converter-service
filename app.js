@@ -46,12 +46,12 @@ app.patch('/complaint-form-email-converter/', async function(req, res, next) {
         const receiverEmail = createReceiverEmail(form, attachments, fromAddress, toAddress);
 
         console.log(`Inserting emails to mailbox "${mailbox}"`);
-        setEmailToMailbox(senderEmail, emailGraph, mailbox);
-        setEmailToMailbox(receiverEmail, emailGraph, mailbox);
+        await setEmailToMailbox(senderEmail, emailGraph, mailbox);
+        await setEmailToMailbox(receiverEmail, emailGraph, mailbox);
 
         console.log(`Setting form ${form.uuid} to "converted"`);
-        setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid);
-        setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid);
+        await setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid);
+        await setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid);
 
         console.log(`End of processing form ${form.uuid}`);
       } catch(e) {
