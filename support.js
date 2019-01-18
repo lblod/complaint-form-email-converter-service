@@ -120,10 +120,9 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   var attachmentsHtml = '';
   var attachmentsPlainText = '';
   attachments.map((attachment) => {
-    const downloadLink = `${fileDownloadPrefix}/files/${attachment.uuid}/download?name=${attachment.filename}`;
     const formattedAttachment = `${attachment.filename} (${humanReadableSize(attachment.size)})`;
-    attachmentsHtml += `<li><a href="${downloadLink}" target="_blank">${formattedAttachment}</a></li>\n\t`;
-    attachmentsPlainText += `${formattedAttachment} (${downloadLink})\n\t`;
+    attachmentsHtml += `<li>${formattedAttachment}</li>\n\t`;
+    attachmentsPlainText += `${formattedAttachment}\n\t`;
   });
 
   const plainTextContent = `
