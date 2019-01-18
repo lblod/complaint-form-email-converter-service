@@ -158,7 +158,7 @@ const createSenderEmail = function(form, attachments, fromAddress) {
   <p>Geachte ${senderName}</p><br>
   <p>Het Agentschap Binnenlands Bestuur Vlaanderen heeft uw klacht goed ontvangen:</p><br>
   <div style="margin-left: 40px;">
-    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}/span></p>
+    <p><span style="font-weight:bold;">Beveiligd verzonden:&nbsp;</span><span>${senderName}, ${moment(form.created).format("DD/MM/YY HH:mm")}</span></p>
     <p><span style="font-weight:bold;">Ontvangen:&nbsp;</span><span>Agentschap Binnenlands Bestuur, ${moment().format("DD/MM/YY HH:mm")}</span></p><br><br>
     <p><span style="font-weight:bold;">Naam:&nbsp;</span><span>${senderName}</span></p>
     <p><span style="font-weight:bold;">Contactpersoon indien vereniging:&nbsp;</span><span>${form.contactPersonName}</span></p><br>
