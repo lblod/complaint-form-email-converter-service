@@ -17,7 +17,7 @@ services:
       COMPLAINT_FORM_GRAPH: "http://graph.uri"
       [...]
     volumes:
-      - /path/to/your/application/app/templates/:/app/templates/
+      - ./app/templates/:/app/templates/
 ```
 
 ### Environment variables
@@ -49,5 +49,5 @@ services:
       - database:database
     volumes:
       - /path/to/your/service/:/app/
-      - /path/to/your/application/app/templates/:/app/templates/
+      - ./app/templates/:/app/templates/
 ```
