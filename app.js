@@ -14,7 +14,8 @@ const cronFrequency = process.env.COMPLAINT_FORM_CRON_PATTERN || '*/1 * * * *';
 const complaintFormGraph = process.env.COMPLAINT_FORM_GRAPH || 'http://mu.semte.ch/application';
 const emailGraph = process.env.EMAIL_GRAPH || 'http://mu.semte.ch/graphs/system/email';
 const fileGraph = process.env.FILE_GRAPH || 'http://mu.semte.ch/application';
-const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'noreply-binnenland@vlaanderen.be';
+const fromAddressToComplainer = process.env.EMAIL_FROM_ADDRESS_TO_COMPLAINER || 'noreply-binnenland@vlaanderen.be';
+const fromAddressToAbb = process.env.EMAIL_FROM_ADDRESS_TO_ABB || 'noreply@lblod.info';
 const toAddress = process.env.EMAIL_TO_ADDRESS || 'binnenland@vlaanderen.be';
 const mailbox = process.env.MAILBOX || 'outbox';
 
@@ -42,8 +43,8 @@ app.patch('/complaint-form-email-converter/', async function(req, res, next) {
         const attachments = await fetchFormAttachments(complaintFormGraph, fileGraph, form.uuid);
 
         console.log(`Creating emails for form ${form.uuid}`);
-        const senderEmail = createSenderEmail(form, attachments, fromAddress);
-        const receiverEmail = createReceiverEmail(form, attachments, fromAddress, toAddress);
+        const senderEmail = createSenderEmail(form, attachments, fromAddressToComplainer);
+        const receiverEmail = createReceiverEmail(form, attachments, fromAddressToAbb, toAddress);
 
         console.log(`Inserting emails to mailbox "${mailbox}"`);
         await setEmailToMailbox(senderEmail, emailGraph, mailbox);
