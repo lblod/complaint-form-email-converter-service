@@ -143,7 +143,7 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
 const setEmailToMailbox = async function(email, emailGraph, mailbox) {
   const result = await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
-    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/03/22/nie#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
 
     INSERT {
