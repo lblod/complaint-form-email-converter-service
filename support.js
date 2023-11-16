@@ -1,5 +1,5 @@
 import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
-import { querySudo as query } from './auth-sudo';
+import * as mas from '@lblod/mu-auth-sudo';
 import moment from 'moment';
 import {
   senderEmailSubject,
@@ -36,7 +36,7 @@ const parseResult = function (result) {
  * Retrieve forms wating to be converted to emails
  */
 export const fetchFormsToBeConverted = async function (complaintFormGraph) {
-  const result = await query(`
+  const result = await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX schema: <http://schema.org/>
@@ -94,7 +94,7 @@ export const fetchFormAttachments = async function (
   fileGraph,
   formUuid,
 ) {
-  const result = await query(`
+  const result = await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX schema: <http://schema.org/>
@@ -166,7 +166,7 @@ export const createReceiverEmail = function (
  * Set emails to mailbox
  */
 export const setEmailToMailbox = async function (email, emailGraph, mailbox) {
-  await query(`
+  await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -210,7 +210,7 @@ export const setFormAsConverted = async function (
   formUuid,
   emailUuid,
 ) {
-  await query(`
+  await mas.querySudo(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>

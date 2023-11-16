@@ -10,6 +10,7 @@
   },
   "main": "app.js",
   "dependencies": {
+    "@lblod/mu-auth-sudo": "^0.6.1",
     "cron": "^1.5.1",
     "moment": "^2.23.0",
     "uuid": "^3.3.2"
