@@ -1,6 +1,7 @@
 import * as mas from '@lblod/mu-auth-sudo';
 import moment from 'moment';
 import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import { v4 as uuid } from 'uuid';
 import {
   senderEmailSubject,
   senderEmailPlainTextContent,
@@ -128,10 +129,8 @@ export async function fetchFormAttachments(
 }
 
 export function createSenderEmail(form, attachments, fromAddress) {
-  const uuidv4 = require('uuid/v4');
-
   const email = {
-    uuid: uuidv4(),
+    uuid: uuid(),
     from: fromAddress,
     to: form.senderEmail,
     subject: senderEmailSubject(),
@@ -143,10 +142,8 @@ export function createSenderEmail(form, attachments, fromAddress) {
 }
 
 export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
-  const uuidv4 = require('uuid/v4');
-
   const email = {
-    uuid: uuidv4(),
+    uuid: uuid(),
     from: fromAddress,
     to: toAddress,
     subject: receiverEmailSubject(form),
