@@ -1,6 +1,6 @@
 import * as mas from '@lblod/mu-auth-sudo';
 import moment from 'moment';
-import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import * as mu from 'mu';
 import { v4 as uuid } from 'uuid';
 import {
   senderEmailSubject,
@@ -47,7 +47,7 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
 
     SELECT ?complaintForm ?uuid ?name ?contactPersonName ?street ?houseNumber ?addressComplement ?locality ?postalCode ?telephone ?senderEmail ?content ?created
     WHERE {
-      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
         ?complaintForm
           a ext:ComplaintForm ;
           core:uuid ?uuid ;
@@ -108,10 +108,10 @@ export async function fetchFormAttachments(
 
     SELECT ?file ?uuid ?filename ?format ?size
     WHERE {
-      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
         ?complaintForm
           a ext:ComplaintForm ;
-          core:uuid ${sparqlEscapeString(formUuid)} ;
+          core:uuid ${mu.sparqlEscapeString(formUuid)} ;
           nmo:hasAttachment ?attachment .
       }
       GRAPH <${fileGraph}> {
@@ -165,7 +165,7 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     INSERT {
-      GRAPH ${sparqlEscapeUri(emailGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
         ?email
           a nmo:Email ;
           core:uuid "${email.uuid}" ;
@@ -179,10 +179,10 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
       }
     }
     WHERE {
-      GRAPH ${sparqlEscapeUri(emailGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
         ?mailfolder
           a nfo:Folder ;
-          nie:title ${sparqlEscapeString(mailbox)} .
+          nie:title ${mu.sparqlEscapeString(mailbox)} .
         BIND(
           IRI(CONCAT(
             "http://data.lblod.info/id/emails/",
@@ -209,20 +209,20 @@ export async function setFormAsConverted(
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     INSERT {
-      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
         ?form ext:isConvertedIntoEmail ?email .
       }
     }
     WHERE {
-      GRAPH ${sparqlEscapeUri(emailGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
         ?email
           a nmo:Email ;
-          core:uuid ${sparqlEscapeString(emailUuid)} .
+          core:uuid ${mu.sparqlEscapeString(emailUuid)} .
       }
-      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
         ?form
           a ext:ComplaintForm ;
-          core:uuid ${sparqlEscapeString(formUuid)} .
+          core:uuid ${mu.sparqlEscapeString(formUuid)} .
       }
     }
   `);
