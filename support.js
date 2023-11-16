@@ -35,7 +35,7 @@ const parseResult = function (result) {
 /**
  * Retrieve forms wating to be converted to emails
  */
-const fetchFormsToBeConverted = async function (complaintFormGraph) {
+export const fetchFormsToBeConverted = async function (complaintFormGraph) {
   const result = await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -89,7 +89,7 @@ const fetchFormsToBeConverted = async function (complaintFormGraph) {
 /**
  * Retrieve the attachments of a form
  */
-const fetchFormAttachments = async function (
+export const fetchFormAttachments = async function (
   complaintFormGraph,
   fileGraph,
   formUuid,
@@ -127,7 +127,7 @@ const fetchFormAttachments = async function (
   return parseResult(result);
 };
 
-const createSenderEmail = function (form, attachments, fromAddress) {
+export const createSenderEmail = function (form, attachments, fromAddress) {
   const uuidv4 = require('uuid/v4');
 
   const email = {
@@ -142,7 +142,7 @@ const createSenderEmail = function (form, attachments, fromAddress) {
   return email;
 };
 
-const createReceiverEmail = function (
+export const createReceiverEmail = function (
   form,
   attachments,
   fromAddress,
@@ -165,7 +165,7 @@ const createReceiverEmail = function (
 /**
  * Set emails to mailbox
  */
-const setEmailToMailbox = async function (email, emailGraph, mailbox) {
+export const setEmailToMailbox = async function (email, emailGraph, mailbox) {
   await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
@@ -204,7 +204,7 @@ const setEmailToMailbox = async function (email, emailGraph, mailbox) {
 /**
  * Set the form as converted to avoid re-converting it indefinitely
  */
-const setFormAsConverted = async function (
+export const setFormAsConverted = async function (
   complaintFormGraph,
   emailGraph,
   formUuid,
@@ -234,13 +234,4 @@ const setFormAsConverted = async function (
       }
     }
   `);
-};
-
-export {
-  fetchFormsToBeConverted,
-  fetchFormAttachments,
-  createSenderEmail,
-  createReceiverEmail,
-  setEmailToMailbox,
-  setFormAsConverted,
 };
