@@ -2,19 +2,27 @@
   "name": "complaint-form-email-converter-service",
   "version": "0.3.0",
   "description": "Microservice that converts complaint forms to emails",
+  "author": "redpencil.io",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lblod/complain-form-email-converter-service.git"
+  },
+  "main": "app.js",
   "dependencies": {
     "cron": "^1.5.1",
     "moment": "^2.23.0",
     "uuid": "^3.3.2"
   },
-  "main": "app.js",
+  "devDependencies": {
+    "eslint": "^8.32.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.0"
+  },
   "scripts": {
+    "lint:js": "eslint . --cache",
+    "lint:js:fix": "eslint . --cache --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lblod/complain-form-email-converter-service.git"
-  },
-  "author": "redpencil.io",
-  "license": "MIT"
+  }
 }
