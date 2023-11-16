@@ -42,35 +42,45 @@ const fetchFormsToBeConverted = async function (complaintFormGraph) {
     PREFIX schema: <http://schema.org/>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     SELECT ?complaintForm ?uuid ?name ?contactPersonName ?street ?houseNumber ?addressComplement ?locality ?postalCode ?telephone ?senderEmail ?content ?created
     WHERE {
-        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
-          ?complaintForm a ext:ComplaintForm;
-              <http://mu.semte.ch/vocabularies/core/uuid> ?uuid;
-              foaf:name ?name;
-              schema:streetAddress ?street;
-              schema:postOfficeBoxNumber ?houseNumber;
-              schema:addressLocality ?locality;
-              schema:postalCode ?postalCode;
-              schema:email ?senderEmail;
-              ext:content ?content;
-              dct:created ?created.
+      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+        ?complaintForm
+          a ext:ComplaintForm ;
+          core:uuid ?uuid ;
+          foaf:name ?name ;
+          schema:streetAddress ?street ;
+          schema:postOfficeBoxNumber ?houseNumber ;
+          schema:addressLocality ?locality ;
+          schema:postalCode ?postalCode ;
+          schema:email ?senderEmail ;
+          ext:content ?content ;
+          dct:created ?created .
 
-          BIND('-' as ?defaultContactPersonName).
-          OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName }.
-          BIND(coalesce(?optionalContactPersonName, ?defaultContactPersonName) as ?contactPersonName).
+        BIND('-' as ?defaultContactPersonName)
+        OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
+        BIND(
+          coalesce(
+            ?optionalContactPersonName,
+            ?defaultContactPersonName)
+          as ?contactPersonName)
 
-          BIND('-' as ?defaultAddressComplement).
-          OPTIONAL { ?complaintForm ext:addressComplement ?optionalAddressComplement }.
-          BIND(coalesce(?optionalAddressComplement, ?defaultAddressComplement) as ?addressComplement).
+        BIND('-' as ?defaultAddressComplement).
+        OPTIONAL { ?complaintForm ext:addressComplement ?optionalAddressComplement . }
+        BIND(
+          coalesce(
+            ?optionalAddressComplement,
+            ?defaultAddressComplement)
+          as ?addressComplement).
 
-          BIND('-' as ?defaultTelephone).
-          OPTIONAL { ?complaintForm schema:telephone ?optionalTelephone }.
-          BIND(coalesce(?optionalTelephone, ?defaultTelephone) as ?telephone).
+        BIND('-' as ?defaultTelephone).
+        OPTIONAL { ?complaintForm schema:telephone ?optionalTelephone . }
+        BIND(coalesce(?optionalTelephone, ?defaultTelephone) as ?telephone)
 
-          FILTER NOT EXISTS {{ ?complaintForm ext:isConvertedIntoEmail ?email. }}
-        }
+        FILTER NOT EXISTS { ?complaintForm ext:isConvertedIntoEmail ?email . }
+      }
     }
   `);
   return parseResult(result);
@@ -93,23 +103,25 @@ const fetchFormAttachments = async function (
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     SELECT ?file ?uuid ?filename ?format ?size
     WHERE {
-        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
-          ?complaintForm a ext:ComplaintForm;
-              <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
-    formUuid,
-  )};
-              nmo:hasAttachment ?attachment.
-        }
-        GRAPH <${fileGraph}> {
-            ?attachment nfo:fileName ?filename;
-                  <http://mu.semte.ch/vocabularies/core/uuid> ?uuid.
-            ?file nie:dataSource ?attachment;
-                  dcterms:format ?format;
-                  nfo:fileSize ?size.
-        }
+      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+        ?complaintForm
+          a ext:ComplaintForm ;
+          core:uuid ${sparqlEscapeString(formUuid)} ;
+          nmo:hasAttachment ?attachment .
+      }
+      GRAPH <${fileGraph}> {
+        ?attachment
+          nfo:fileName ?filename ;
+          core:uuid ?uuid .
+        ?file
+          nie:dataSource ?attachment ;
+          dcterms:format ?format ;
+          nfo:fileSize ?size .
+      }
     }
   `);
   return parseResult(result);
@@ -154,31 +166,36 @@ const createReceiverEmail = function (
  * Set emails to mailbox
  */
 const setEmailToMailbox = async function (email, emailGraph, mailbox) {
-  const result = await query(`
+  await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     INSERT {
-       GRAPH ${sparqlEscapeUri(emailGraph)} {
-           ?email a nmo:Email;
-               <http://mu.semte.ch/vocabularies/core/uuid> "${email.uuid}";
-               nmo:messageFrom "${email.from}";
-               nmo:emailTo "${email.to}";
-               nmo:messageSubject "${email.subject}";
-               nmo:plainTextMessageContent """${email.plainTextContent}""";
-               nmo:htmlMessageContent """${email.htmlContent}""";
-               nmo:sentDate "${moment().format()}";
-               nmo:isPartOf ?mailfolder.
-        }
+      GRAPH ${sparqlEscapeUri(emailGraph)} {
+        ?email
+          a nmo:Email ;
+          core:uuid "${email.uuid}" ;
+          nmo:messageFrom "${email.from}" ;
+          nmo:emailTo "${email.to}" ;
+          nmo:messageSubject "${email.subject}" ;
+          nmo:plainTextMessageContent """${email.plainTextContent}""" ;
+          nmo:htmlMessageContent """${email.htmlContent}""" ;
+          nmo:sentDate "${moment().format()}" ;
+          nmo:isPartOf ?mailfolder .
+      }
     }
     WHERE {
       GRAPH ${sparqlEscapeUri(emailGraph)} {
-            ?mailfolder a nfo:Folder;
-                nie:title  ${sparqlEscapeString(mailbox)}.
-            BIND(IRI(CONCAT("http://data.lblod.info/id/emails/", "${
-  email.uuid
-}")) AS ?email)
+        ?mailfolder
+          a nfo:Folder ;
+          nie:title ${sparqlEscapeString(mailbox)} .
+        BIND(
+          IRI(CONCAT(
+            "http://data.lblod.info/id/emails/",
+            "${email.uuid}"))
+          AS ?email)
         }
     }
   `);
@@ -193,29 +210,28 @@ const setFormAsConverted = async function (
   formUuid,
   emailUuid,
 ) {
-  const result = await query(`
+  await query(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX core: <http://mu.semte.ch/vocabularies/core/>
 
     INSERT {
-        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
-            ?form ext:isConvertedIntoEmail ?email.
-        }
+      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+        ?form ext:isConvertedIntoEmail ?email .
+      }
     }
     WHERE {
-        GRAPH ${sparqlEscapeUri(emailGraph)} {
-            ?email a nmo:Email;
-               <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
-    emailUuid,
-  )}.
-        }
-        GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
-            ?form a ext:ComplaintForm;
-                <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
-    formUuid,
-  )}.
-        }
+      GRAPH ${sparqlEscapeUri(emailGraph)} {
+        ?email
+          a nmo:Email ;
+          core:uuid ${sparqlEscapeString(emailUuid)} .
+      }
+      GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
+        ?form
+          a ext:ComplaintForm ;
+          core:uuid ${sparqlEscapeString(formUuid)} .
+      }
     }
   `);
 };
