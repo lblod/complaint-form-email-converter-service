@@ -1,5 +1,5 @@
 import { app, errorHandler } from 'mu';
-import * as env from 'env';
+import * as env from './env';
 import * as support from './support';
 import { CronJob } from 'cron';
 
