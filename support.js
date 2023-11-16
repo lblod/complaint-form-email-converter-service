@@ -1,6 +1,6 @@
-import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
 import * as mas from '@lblod/mu-auth-sudo';
 import moment from 'moment';
+import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
 import {
   senderEmailSubject,
   senderEmailPlainTextContent,
@@ -17,7 +17,7 @@ import {
  * @method parseResult
  * @return {Array}
  */
-const parseResult = function (result) {
+function parseResult(result) {
   const bindingKeys = result.head.vars;
   return result.results.bindings.map((row) => {
     const obj = {};
@@ -30,12 +30,12 @@ const parseResult = function (result) {
     }
     return obj;
   });
-};
+}
 
 /**
  * Retrieve forms wating to be converted to emails
  */
-export const fetchFormsToBeConverted = async function (complaintFormGraph) {
+export async function fetchFormsToBeConverted(complaintFormGraph) {
   const result = await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -84,12 +84,12 @@ export const fetchFormsToBeConverted = async function (complaintFormGraph) {
     }
   `);
   return parseResult(result);
-};
+}
 
 /**
  * Retrieve the attachments of a form
  */
-export const fetchFormAttachments = async function (
+export async function fetchFormAttachments(
   complaintFormGraph,
   fileGraph,
   formUuid,
@@ -125,9 +125,9 @@ export const fetchFormAttachments = async function (
     }
   `);
   return parseResult(result);
-};
+}
 
-export const createSenderEmail = function (form, attachments, fromAddress) {
+export function createSenderEmail(form, attachments, fromAddress) {
   const uuidv4 = require('uuid/v4');
 
   const email = {
@@ -140,14 +140,9 @@ export const createSenderEmail = function (form, attachments, fromAddress) {
   };
 
   return email;
-};
+}
 
-export const createReceiverEmail = function (
-  form,
-  attachments,
-  fromAddress,
-  toAddress,
-) {
+export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
   const uuidv4 = require('uuid/v4');
 
   const email = {
@@ -160,12 +155,12 @@ export const createReceiverEmail = function (
   };
 
   return email;
-};
+}
 
 /**
  * Set emails to mailbox
  */
-export const setEmailToMailbox = async function (email, emailGraph, mailbox) {
+export async function setEmailToMailbox(email, emailGraph, mailbox) {
   await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
@@ -199,12 +194,12 @@ export const setEmailToMailbox = async function (email, emailGraph, mailbox) {
         }
     }
   `);
-};
+}
 
 /**
  * Set the form as converted to avoid re-converting it indefinitely
  */
-export const setFormAsConverted = async function (
+export async function setFormAsConverted(
   complaintFormGraph,
   emailGraph,
   formUuid,
@@ -234,4 +229,4 @@ export const setFormAsConverted = async function (
       }
     }
   `);
-};
+}
