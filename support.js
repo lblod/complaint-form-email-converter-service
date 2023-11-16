@@ -4,12 +4,12 @@ import moment from 'moment';
 import {
   senderEmailSubject,
   senderEmailPlainTextContent,
-  senderEmailHtmlContent
+  senderEmailHtmlContent,
 } from './templates/senderEmail';
 import {
   receiverEmailSubject,
   receiverEmailPlainTextContent,
-  receiverEmailHtmlContent
+  receiverEmailHtmlContent,
 } from './templates/receiverEmail';
 
 /**
@@ -17,14 +17,16 @@ import {
  * @method parseResult
  * @return {Array}
  */
-const parseResult = function(result) {
+const parseResult = function (result) {
   const bindingKeys = result.head.vars;
   return result.results.bindings.map((row) => {
     const obj = {};
     try {
-      bindingKeys.forEach((key) => obj[key] = row[key].value);
-    } catch(e) {
-      console.log(`Error when parsing fetched form ${row.complaintForm.value}: ${e.message}`)
+      bindingKeys.forEach((key) => (obj[key] = row[key].value));
+    } catch (e) {
+      console.log(
+        `Error when parsing fetched form ${row.complaintForm.value}: ${e.message}`,
+      );
     }
     return obj;
   });
@@ -33,7 +35,7 @@ const parseResult = function(result) {
 /**
  * Retrieve forms wating to be converted to emails
  */
-const fetchFormsToBeConverted = async function(complaintFormGraph) {
+const fetchFormsToBeConverted = async function (complaintFormGraph) {
   const result = await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -77,7 +79,11 @@ const fetchFormsToBeConverted = async function(complaintFormGraph) {
 /**
  * Retrieve the attachments of a form
  */
-const fetchFormAttachments = async function(complaintFormGraph, fileGraph, formUuid) {
+const fetchFormAttachments = async function (
+  complaintFormGraph,
+  fileGraph,
+  formUuid,
+) {
   const result = await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -92,7 +98,9 @@ const fetchFormAttachments = async function(complaintFormGraph, fileGraph, formU
     WHERE {
         GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
           ?complaintForm a ext:ComplaintForm;
-              <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(formUuid)};
+              <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
+    formUuid,
+  )};
               nmo:hasAttachment ?attachment.
         }
         GRAPH <${fileGraph}> {
@@ -107,7 +115,7 @@ const fetchFormAttachments = async function(complaintFormGraph, fileGraph, formU
   return parseResult(result);
 };
 
-const createSenderEmail = function(form, attachments, fromAddress) {
+const createSenderEmail = function (form, attachments, fromAddress) {
   const uuidv4 = require('uuid/v4');
 
   const email = {
@@ -116,13 +124,18 @@ const createSenderEmail = function(form, attachments, fromAddress) {
     to: form.senderEmail,
     subject: senderEmailSubject(),
     plainTextContent: senderEmailPlainTextContent(form, attachments),
-    htmlContent: senderEmailHtmlContent(form, attachments)
+    htmlContent: senderEmailHtmlContent(form, attachments),
   };
 
   return email;
 };
 
-const createReceiverEmail = function(form, attachments, fromAddress, toAddress) {
+const createReceiverEmail = function (
+  form,
+  attachments,
+  fromAddress,
+  toAddress,
+) {
   const uuidv4 = require('uuid/v4');
 
   const email = {
@@ -131,7 +144,7 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
     to: toAddress,
     subject: receiverEmailSubject(form),
     plainTextContent: receiverEmailPlainTextContent(form, attachments),
-    htmlContent: receiverEmailHtmlContent(form, attachments)
+    htmlContent: receiverEmailHtmlContent(form, attachments),
   };
 
   return email;
@@ -140,7 +153,7 @@ const createReceiverEmail = function(form, attachments, fromAddress, toAddress) 
 /**
  * Set emails to mailbox
  */
-const setEmailToMailbox = async function(email, emailGraph, mailbox) {
+const setEmailToMailbox = async function (email, emailGraph, mailbox) {
   const result = await query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
@@ -149,12 +162,12 @@ const setEmailToMailbox = async function(email, emailGraph, mailbox) {
     INSERT {
        GRAPH ${sparqlEscapeUri(emailGraph)} {
            ?email a nmo:Email;
-               <http://mu.semte.ch/vocabularies/core/uuid> "${(email.uuid)}";
-               nmo:messageFrom "${(email.from)}";
-               nmo:emailTo "${(email.to)}";
-               nmo:messageSubject "${(email.subject)}";
-               nmo:plainTextMessageContent """${(email.plainTextContent)}""";
-               nmo:htmlMessageContent """${(email.htmlContent)}""";
+               <http://mu.semte.ch/vocabularies/core/uuid> "${email.uuid}";
+               nmo:messageFrom "${email.from}";
+               nmo:emailTo "${email.to}";
+               nmo:messageSubject "${email.subject}";
+               nmo:plainTextMessageContent """${email.plainTextContent}""";
+               nmo:htmlMessageContent """${email.htmlContent}""";
                nmo:sentDate "${moment().format()}";
                nmo:isPartOf ?mailfolder.
         }
@@ -163,7 +176,9 @@ const setEmailToMailbox = async function(email, emailGraph, mailbox) {
       GRAPH ${sparqlEscapeUri(emailGraph)} {
             ?mailfolder a nfo:Folder;
                 nie:title  ${sparqlEscapeString(mailbox)}.
-            BIND(IRI(CONCAT("http://data.lblod.info/id/emails/", "${(email.uuid)}")) AS ?email)
+            BIND(IRI(CONCAT("http://data.lblod.info/id/emails/", "${
+  email.uuid
+}")) AS ?email)
         }
     }
   `);
@@ -172,7 +187,12 @@ const setEmailToMailbox = async function(email, emailGraph, mailbox) {
 /**
  * Set the form as converted to avoid re-converting it indefinitely
  */
-const setFormAsConverted = async function(complaintFormGraph, emailGraph, formUuid, emailUuid) {
+const setFormAsConverted = async function (
+  complaintFormGraph,
+  emailGraph,
+  formUuid,
+  emailUuid,
+) {
   const result = await query(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
@@ -186,15 +206,19 @@ const setFormAsConverted = async function(complaintFormGraph, emailGraph, formUu
     WHERE {
         GRAPH ${sparqlEscapeUri(emailGraph)} {
             ?email a nmo:Email;
-               <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(emailUuid)}.
+               <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
+    emailUuid,
+  )}.
         }
         GRAPH ${sparqlEscapeUri(complaintFormGraph)} {
             ?form a ext:ComplaintForm;
-                <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(formUuid)}.
+                <http://mu.semte.ch/vocabularies/core/uuid> ${sparqlEscapeString(
+    formUuid,
+  )}.
         }
     }
   `);
-}
+};
 
 export {
   fetchFormsToBeConverted,
@@ -202,5 +226,5 @@ export {
   createSenderEmail,
   createReceiverEmail,
   setEmailToMailbox,
-  setFormAsConverted
+  setFormAsConverted,
 };
