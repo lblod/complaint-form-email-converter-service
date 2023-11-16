@@ -1,5 +1,4 @@
 import * as mas from '@lblod/mu-auth-sudo';
-import moment from 'moment';
 import * as mu from 'mu';
 import { v4 as uuid } from 'uuid';
 import {
@@ -158,6 +157,7 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
  * Set emails to mailbox
  */
 export async function setEmailToMailbox(email, emailGraph, mailbox) {
+  const sendDate = new Date();
   await mas.querySudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
@@ -174,7 +174,7 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
           nmo:messageSubject "${email.subject}" ;
           nmo:plainTextMessageContent """${email.plainTextContent}""" ;
           nmo:htmlMessageContent """${email.htmlContent}""" ;
-          nmo:sentDate "${moment().format()}" ;
+          nmo:sentDate "${mu.sparqlEscapeDateTime(sendDate)}" ;
           nmo:isPartOf ?mailfolder .
       }
     }
