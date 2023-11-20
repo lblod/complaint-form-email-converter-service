@@ -113,7 +113,7 @@ export async function fetchFormAttachments(
           core:uuid ${mu.sparqlEscapeString(formUuid)} ;
           nmo:hasAttachment ?attachment .
       }
-      GRAPH <${fileGraph}> {
+      GRAPH ${mu.sparqlEscapeUri(fileGraph)} {
         ?attachment
           nfo:fileName ?filename ;
           core:uuid ?uuid .
@@ -169,13 +169,14 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
       GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
         ${mu.sparqlEscapeUri(`http://data.lblod.info/id/emails/${email.uuid}`)}
           a nmo:Email ;
-          core:uuid "${email.uuid}" ;
-          nmo:messageFrom "${email.from}" ;
-          nmo:emailTo "${email.to}" ;
-          nmo:messageSubject "${email.subject}" ;
-          nmo:plainTextMessageContent """${email.plainTextContent}""" ;
-          nmo:htmlMessageContent """${email.htmlContent}""" ;
-          nmo:sentDate "${mu.sparqlEscapeDateTime(sendDate)}" ;
+          core:uuid ${mu.sparqlEscapeString(email.uuid)} ;
+          nmo:messageFrom ${mu.sparqlEscapeString(email.from)} ;
+          nmo:emailTo ${mu.sparqlEscapeString(email.to)} ;
+          nmo:messageSubject ${mu.sparqlEscapeString(email.subject)} ;
+          nmo:plainTextMessageContent
+            ${mu.sparqlEscapeString(email.plainTextContent)} ;
+          nmo:htmlMessageContent ${mu.sparqlEscapeString(email.htmlContent)} ;
+          nmo:sentDate ${mu.sparqlEscapeDateTime(sendDate)} ;
           nmo:isPartOf ?mailfolder .
       }
     }
