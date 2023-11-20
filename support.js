@@ -163,6 +163,7 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
     INSERT {
       GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
