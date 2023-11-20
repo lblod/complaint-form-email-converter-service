@@ -167,7 +167,7 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
 
     INSERT {
       GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
-        ?email
+        ${mu.sparqlEscapeUri(`http://data.lblod.info/id/emails/${email.uuid}`)}
           a nmo:Email ;
           core:uuid "${email.uuid}" ;
           nmo:messageFrom "${email.from}" ;
@@ -184,14 +184,8 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
         ?mailfolder
           a nfo:Folder ;
           nie:title ${mu.sparqlEscapeString(mailbox)} .
-        BIND(
-          IRI(CONCAT(
-            "http://data.lblod.info/id/emails/",
-            "${email.uuid}"))
-          AS ?email)
-        }
-    }
-  `);
+      }
+    }`);
 }
 
 /**
