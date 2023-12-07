@@ -6,7 +6,7 @@ export const cronFrequency = envvar
   .asString();
 export const complaintFormGraph = envvar
   .get('COMPLAINT_FORM_GRAPH')
-  .default('http://mu.semte.ch/application')
+  .default('http://mu.semte.ch/graphs/public')
   .asString();
 export const emailGraph = envvar
   .get('EMAIL_GRAPH')
@@ -14,7 +14,7 @@ export const emailGraph = envvar
   .asString();
 export const fileGraph = envvar
   .get('FILE_GRAPH')
-  .default('http://mu.semte.ch/application')
+  .default('http://mu.semte.ch/graphs/public')
   .asString();
 export const fromAddressToComplainer = envvar
   .get('EMAIL_FROM_ADDRESS_TO_COMPLAINER')
