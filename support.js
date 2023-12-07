@@ -158,7 +158,7 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
  */
 export async function setEmailToMailbox(email, emailGraph, mailbox) {
   const sendDate = new Date();
-  await mas.querySudo(`
+  await mas.updateSudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -198,7 +198,7 @@ export async function setFormAsConverted(
   formUuid,
   emailUuid,
 ) {
-  await mas.querySudo(`
+  await mas.updateSudo(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
