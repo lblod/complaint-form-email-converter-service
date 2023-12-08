@@ -24,7 +24,9 @@ app.patch('/complaint-form-email-converter/', async function (req, res, next) {
   try {
     await fetchAndConvertComplaintForms();
   } catch (e) {
-    return next(new Error(e.message));
+    return next(e);
+  }
+});
 
 app.post('/delta', async function (req, res, next) {
   res.status(200).end();
@@ -41,9 +43,8 @@ app.post('/delta', async function (req, res, next) {
 
 async function fetchAndConvertComplaintForms() {
   const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
-  if (forms.length == 0)
-    console.log('No forms found that need to be converted');
-  console.log(`Found ${forms.length} forms to convert`);
+  if (forms.length) console.log('No forms found that need to be converted');
+  else console.log(`Found ${forms.length} forms to convert`);
 
   Promise.all(
     forms.map(async (form) => {
