@@ -25,6 +25,17 @@ app.patch('/complaint-form-email-converter/', async function (req, res, next) {
     await fetchAndConvertComplaintForms();
   } catch (e) {
     return next(new Error(e.message));
+
+app.post('/delta', async function (req, res, next) {
+  res.status(200).end();
+  try {
+    //NOTE we could perform the following function based on the delta
+    //changesets, by filtering and selecting for a subject of the correct type,
+    //but this will be just as much "database stress" as what normally happens
+    //with a cron job. So just do the same this as with a cron job.
+    await fetchAndConvertComplaintForms();
+  } catch (e) {
+    return next(e);
   }
 });
 
