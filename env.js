@@ -2,7 +2,7 @@ import envvar from 'env-var';
 
 export const cronFrequency = envvar
   .get('COMPLAINT_FORM_CRON_PATTERN')
-  .default('*/1 * * * *')
+  .default('0 * * * *')
   .asString();
 export const complaintFormGraph = envvar
   .get('COMPLAINT_FORM_GRAPH')
