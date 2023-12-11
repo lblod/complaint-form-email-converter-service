@@ -36,7 +36,7 @@ app.post('/delta', async function (req, res) {
 async function fetchAndConvertComplaintForms() {
   try {
     const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
-    if (forms.length) console.log('No forms found that need to be converted');
+    if (!forms.length) console.log('No forms found that need to be converted');
     else console.log(`Found ${forms.length} forms to convert`);
 
     for (const form of forms) {
