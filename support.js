@@ -128,7 +128,7 @@ export async function fetchFormAttachments(
 }
 
 export function createSenderEmail(form, attachments, fromAddress) {
-  const email = {
+  return {
     uuid: uuid(),
     from: fromAddress,
     to: form.senderEmail,
@@ -136,12 +136,10 @@ export function createSenderEmail(form, attachments, fromAddress) {
     plainTextContent: senderEmailPlainTextContent(form, attachments),
     htmlContent: senderEmailHtmlContent(form, attachments),
   };
-
-  return email;
 }
 
 export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
-  const email = {
+  return {
     uuid: uuid(),
     from: fromAddress,
     to: toAddress,
@@ -149,8 +147,6 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
     plainTextContent: receiverEmailPlainTextContent(form, attachments),
     htmlContent: receiverEmailHtmlContent(form, attachments),
   };
-
-  return email;
 }
 
 /**
@@ -158,7 +154,7 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
  */
 export async function setEmailToMailbox(email, emailGraph, mailbox) {
   const sendDate = new Date();
-  await mas.updateSudo(`
+  return mas.updateSudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -198,7 +194,7 @@ export async function setFormAsConverted(
   formUuid,
   emailUuid,
 ) {
-  await mas.updateSudo(`
+  return mas.updateSudo(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
