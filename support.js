@@ -1,5 +1,6 @@
 import * as mas from '@lblod/mu-auth-sudo';
 import * as mu from 'mu';
+import * as env from './env';
 import { v4 as uuid } from 'uuid';
 import {
   senderEmailSubject,
@@ -218,4 +219,47 @@ export async function setFormAsConverted(
       }
     }
   `);
+}
+
+export async function sendErrorAlert(message, detail, reference) {
+  const id = uuid();
+  const uri = `${env.errorBase}${id}`;
+  const subject = 'Error - Complaint Form Email Converter Service';
+  const referenceTriple = reference
+    ? `${mu.sparqlEscapeUri(uri)}
+         dct:references ${mu.sparqlEscapeUri(reference)} .`
+    : '';
+  const detailTriple = detail
+    ? `${mu.sparqlEscapeUri(uri)}
+         oslc:largePreview ${mu.sparqlEscapeString(detail)} .`
+    : '';
+
+  const insertErrorQuery = `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX oslc: <http://open-services.net/ns/core#>
+
+    INSERT DATA {
+      GRAPH ${mu.sparqlEscapeUri(env.graph)} {
+        ${mu.sparqlEscapeUri(uri)}
+          rdf:type oslc:Error ;
+          mu:uuid ${mu.sparqlEscapeString(id)} ;
+          dct:subject ${mu.sparqlEscapeString(subject)} ;
+          oslc:message ${mu.sparqlEscapeString(message)} ;
+          dct:created ${mu.sparqlEscapeDateTime(new Date().toISOString())} ;
+          dct:creator ${mu.sparqlEscapeUri(env.creator)} .
+        ${referenceTriple}
+        ${detailTriple}
+      }
+    }`;
+  try {
+    await mu.updateSudo(insertErrorQuery);
+    return uri;
+  } catch (e) {
+    console.error(
+      `[ERROR] Something went wrong while trying to store an error.\nMessage: ${e}\nQuery: ${insertErrorQuery}`,
+    );
+  }
 }
