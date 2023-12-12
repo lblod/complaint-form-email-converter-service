@@ -242,7 +242,7 @@ export async function sendErrorAlert(message, detail, reference) {
     PREFIX oslc: <http://open-services.net/ns/core#>
 
     INSERT DATA {
-      GRAPH ${mu.sparqlEscapeUri(env.graph)} {
+      GRAPH ${mu.sparqlEscapeUri(env.errorGraph)} {
         ${mu.sparqlEscapeUri(uri)}
           rdf:type oslc:Error ;
           mu:uuid ${mu.sparqlEscapeString(id)} ;
