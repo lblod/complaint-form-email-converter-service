@@ -100,6 +100,10 @@ async function fetchAndConvertComplaintForms() {
     }
   } catch (generalError) {
     console.error(`An error has occured: ${generalError.message}`);
+    await support.sendErrorAlert(
+      'A general error has occured.',
+      generalError.message,
+    );
   }
 }
 
