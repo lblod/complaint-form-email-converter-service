@@ -255,7 +255,7 @@ export async function sendErrorAlert(message, detail, reference) {
       }
     }`;
   try {
-    await mu.updateSudo(insertErrorQuery);
+    await mas.updateSudo(insertErrorQuery);
     return uri;
   } catch (e) {
     console.error(
