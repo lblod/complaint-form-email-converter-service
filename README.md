@@ -27,7 +27,7 @@ services:
 
 Optionally, you can put the following snippet in the `delta-notifier` config:
 
-```json
+```javascript
 {
   match: {
     predicate: {
