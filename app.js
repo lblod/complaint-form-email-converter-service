@@ -89,7 +89,7 @@ async function fetchAndConvertComplaintForms() {
 
         console.log(`End of processing form ${form.uuid}`);
       } catch (formError) {
-        const errorMsg = `An error has occured while processing form ${form.uuid}`;
+        const errorMsg = `An error has occured while processing form ${form.complaintForm}`;
         console.error(errorMsg + `:  ${formError.message}`);
         await support.sendErrorAlert(
           errorMsg,
