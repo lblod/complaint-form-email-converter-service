@@ -1,6 +1,6 @@
 {
   "name": "complaint-form-email-converter-service",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Microservice that converts complaint forms to emails",
   "author": "redpencil.io",
   "license": "MIT",
