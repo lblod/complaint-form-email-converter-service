@@ -6,12 +6,12 @@ import {
   senderEmailSubject,
   senderEmailPlainTextContent,
   senderEmailHtmlContent,
-} from './templates/senderEmail';
+} from './config/senderEmail';
 import {
   receiverEmailSubject,
   receiverEmailPlainTextContent,
   receiverEmailHtmlContent,
-} from './templates/receiverEmail';
+} from './config/receiverEmail';
 
 /**
  * Convert results of select query to an array of objects.
