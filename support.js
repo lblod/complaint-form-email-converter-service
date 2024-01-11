@@ -1,16 +1,17 @@
 import * as mas from '@lblod/mu-auth-sudo';
 import * as mu from 'mu';
+import * as env from './env';
 import { v4 as uuid } from 'uuid';
 import {
   senderEmailSubject,
   senderEmailPlainTextContent,
   senderEmailHtmlContent,
-} from './templates/senderEmail';
+} from './config/senderEmail';
 import {
   receiverEmailSubject,
   receiverEmailPlainTextContent,
   receiverEmailHtmlContent,
-} from './templates/receiverEmail';
+} from './config/receiverEmail';
 
 /**
  * Convert results of select query to an array of objects.
@@ -128,7 +129,7 @@ export async function fetchFormAttachments(
 }
 
 export function createSenderEmail(form, attachments, fromAddress) {
-  const email = {
+  return {
     uuid: uuid(),
     from: fromAddress,
     to: form.senderEmail,
@@ -136,12 +137,10 @@ export function createSenderEmail(form, attachments, fromAddress) {
     plainTextContent: senderEmailPlainTextContent(form, attachments),
     htmlContent: senderEmailHtmlContent(form, attachments),
   };
-
-  return email;
 }
 
 export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
-  const email = {
+  return {
     uuid: uuid(),
     from: fromAddress,
     to: toAddress,
@@ -149,8 +148,6 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
     plainTextContent: receiverEmailPlainTextContent(form, attachments),
     htmlContent: receiverEmailHtmlContent(form, attachments),
   };
-
-  return email;
 }
 
 /**
@@ -158,7 +155,7 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
  */
 export async function setEmailToMailbox(email, emailGraph, mailbox) {
   const sendDate = new Date();
-  await mas.updateSudo(`
+  return mas.updateSudo(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -198,7 +195,7 @@ export async function setFormAsConverted(
   formUuid,
   emailUuid,
 ) {
-  await mas.updateSudo(`
+  return mas.updateSudo(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -222,4 +219,47 @@ export async function setFormAsConverted(
       }
     }
   `);
+}
+
+export async function sendErrorAlert(message, detail, reference) {
+  const id = uuid();
+  const uri = `${env.errorBase}${id}`;
+  const subject = 'Error - Complaint Form Email Converter Service';
+  const referenceTriple = reference
+    ? `${mu.sparqlEscapeUri(uri)}
+         dct:references ${mu.sparqlEscapeUri(reference)} .`
+    : '';
+  const detailTriple = detail
+    ? `${mu.sparqlEscapeUri(uri)}
+         oslc:largePreview ${mu.sparqlEscapeString(detail)} .`
+    : '';
+
+  const insertErrorQuery = `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX oslc: <http://open-services.net/ns/core#>
+
+    INSERT DATA {
+      GRAPH ${mu.sparqlEscapeUri(env.errorGraph)} {
+        ${mu.sparqlEscapeUri(uri)}
+          rdf:type oslc:Error ;
+          mu:uuid ${mu.sparqlEscapeString(id)} ;
+          dct:subject ${mu.sparqlEscapeString(subject)} ;
+          oslc:message ${mu.sparqlEscapeString(message)} ;
+          dct:created ${mu.sparqlEscapeDateTime(new Date().toISOString())} ;
+          dct:creator ${mu.sparqlEscapeUri(env.creator)} .
+        ${referenceTriple}
+        ${detailTriple}
+      }
+    }`;
+  try {
+    await mas.updateSudo(insertErrorQuery);
+    return uri;
+  } catch (e) {
+    console.error(
+      `[ERROR] Something went wrong while trying to store an error.\nMessage: ${e}\nQuery: ${insertErrorQuery}`,
+    );
+  }
 }

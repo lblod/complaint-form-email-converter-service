@@ -9,33 +9,37 @@ app.get('/', async function (req, res) {
 
 new CronJob(
   env.cronFrequency,
-  function () {
+  async function () {
     console.log(
       `Complaint form to email conversion triggered by cron job at ${new Date().toISOString()}`,
     );
-    fetchAndConvertComplaintForms();
+    await fetchAndConvertComplaintForms();
   },
   null,
   true,
 );
 
-app.patch('/complaint-form-email-converter/', async function (req, res, next) {
+app.patch('/complaint-form-email-converter/', async function (req, res) {
   res.status(200).end();
-  try {
-    await fetchAndConvertComplaintForms();
-  } catch (e) {
-    return next(new Error(e.message));
-  }
+  await fetchAndConvertComplaintForms();
+});
+
+app.post('/delta', async function (req, res) {
+  res.status(200).end();
+  //NOTE we could perform the following function based on the delta
+  //changesets, by filtering and selecting for a subject of the correct type,
+  //but this will be just as much "database stress" as what normally happens
+  //with a cron job. So just do the same thing as with a cron job.
+  await fetchAndConvertComplaintForms();
 });
 
 async function fetchAndConvertComplaintForms() {
-  const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
-  if (forms.length == 0)
-    console.log('No forms found that need to be converted');
-  console.log(`Found ${forms.length} forms to convert`);
+  try {
+    const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
+    if (!forms.length) console.log('No forms found that need to be converted');
+    else console.log(`Found ${forms.length} forms to convert`);
 
-  Promise.all(
-    forms.map(async (form) => {
+    for (const form of forms) {
       try {
         console.log(`Fetching attachments for form ${form.uuid}`);
         const attachments = await support.fetchFormAttachments(
@@ -84,13 +88,23 @@ async function fetchAndConvertComplaintForms() {
         );
 
         console.log(`End of processing form ${form.uuid}`);
-      } catch (e) {
-        console.log(
-          `An error has occured while processing form ${form.uuid}: ${e.message}`,
+      } catch (formError) {
+        const errorMsg = `An error has occured while processing form ${form.complaintForm}`;
+        console.error(errorMsg + `:  ${formError.message}`);
+        await support.sendErrorAlert(
+          errorMsg,
+          formError.message,
+          form.complaintForm,
         );
       }
-    }),
-  );
+    }
+  } catch (generalError) {
+    console.error(`An error has occured: ${generalError.message}`);
+    await support.sendErrorAlert(
+      'A general error has occured.',
+      generalError.message,
+    );
+  }
 }
 
 app.use(errorHandler);

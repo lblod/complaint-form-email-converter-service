@@ -2,7 +2,7 @@ import envvar from 'env-var';
 
 export const cronFrequency = envvar
   .get('COMPLAINT_FORM_CRON_PATTERN')
-  .default('*/1 * * * *')
+  .default('0 * * * *')
   .asString();
 export const complaintFormGraph = envvar
   .get('COMPLAINT_FORM_GRAPH')
@@ -29,3 +29,18 @@ export const toAddress = envvar
   .default('binnenland@vlaanderen.be')
   .asString();
 export const mailbox = envvar.get('MAILBOX').default('outbox').asString();
+
+export const creator = envvar
+  .get('CREATOR')
+  .default(
+    'http://lblod.data.gift/services/complaint-form-email-converter-service',
+  )
+  .asString();
+export const errorGraph = envvar
+  .get('ERROR_GRAPH')
+  .default('http://mu.semte.ch/graphs/error')
+  .asString();
+export const errorBase = envvar
+  .get('ERROR_BASE')
+  .default('http://data.lblod.info/errors/')
+  .asString();
