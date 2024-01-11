@@ -1,67 +1,110 @@
 import { app, errorHandler } from 'mu';
+import * as env from './env';
+import * as support from './support';
 import { CronJob } from 'cron';
-import {
-  fetchFormsToBeConverted,
-  fetchFormAttachments,
-  createSenderEmail,
-  createReceiverEmail,
-  setEmailToMailbox,
-  setFormAsConverted
-} from './support';
-import request from 'request';
 
-const cronFrequency = process.env.COMPLAINT_FORM_CRON_PATTERN || '*/1 * * * *';
-const complaintFormGraph = process.env.COMPLAINT_FORM_GRAPH || 'http://mu.semte.ch/application';
-const emailGraph = process.env.EMAIL_GRAPH || 'http://mu.semte.ch/graphs/system/email';
-const fileGraph = process.env.FILE_GRAPH || 'http://mu.semte.ch/application';
-const fromAddressToComplainer = process.env.EMAIL_FROM_ADDRESS_TO_COMPLAINER || 'noreply-binnenland@vlaanderen.be';
-const fromAddressToAbb = process.env.EMAIL_FROM_ADDRESS_TO_ABB || 'noreply@lblod.info';
-const toAddress = process.env.EMAIL_TO_ADDRESS || 'binnenland@vlaanderen.be';
-const mailbox = process.env.MAILBOX || 'outbox';
-
-app.get('/', async function(req, res) {
+app.get('/', async function (req, res) {
   res.send('Hello from complaint-form-email-converter-service');
 });
 
-new CronJob(cronFrequency, function() {
-  console.log(`Complaint form to email conversion triggered by cron job at ${new Date().toISOString()}`);
-  request.patch('http://localhost/complaint-form-email-converter/');
-}, null, true);
+new CronJob(
+  env.cronFrequency,
+  async function () {
+    console.log(
+      `Complaint form to email conversion triggered by cron job at ${new Date().toISOString()}`,
+    );
+    await fetchAndConvertComplaintForms();
+  },
+  null,
+  true,
+);
 
-app.patch('/complaint-form-email-converter/', async function(req, res, next) {
+app.patch('/complaint-form-email-converter/', async function (req, res) {
+  res.status(200).end();
+  await fetchAndConvertComplaintForms();
+});
+
+app.post('/delta', async function (req, res) {
+  res.status(200).end();
+  //NOTE we could perform the following function based on the delta
+  //changesets, by filtering and selecting for a subject of the correct type,
+  //but this will be just as much "database stress" as what normally happens
+  //with a cron job. So just do the same thing as with a cron job.
+  await fetchAndConvertComplaintForms();
+});
+
+async function fetchAndConvertComplaintForms() {
   try {
-    const forms = await fetchFormsToBeConverted(complaintFormGraph);
-    if (forms.length == 0) {
-      console.log(`No forms found that need to be converted`);
-      return res.status(204).end();
-    }
-    console.log(`Found ${forms.length} forms to convert`);
+    const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
+    if (!forms.length) console.log('No forms found that need to be converted');
+    else console.log(`Found ${forms.length} forms to convert`);
 
-    Promise.all(forms.map(async (form) => {
+    for (const form of forms) {
       try {
         console.log(`Fetching attachments for form ${form.uuid}`);
-        const attachments = await fetchFormAttachments(complaintFormGraph, fileGraph, form.uuid);
+        const attachments = await support.fetchFormAttachments(
+          env.complaintFormGraph,
+          env.fileGraph,
+          form.uuid,
+        );
 
         console.log(`Creating emails for form ${form.uuid}`);
-        const senderEmail = createSenderEmail(form, attachments, fromAddressToComplainer);
-        const receiverEmail = createReceiverEmail(form, attachments, fromAddressToAbb, toAddress);
+        const senderEmail = support.createSenderEmail(
+          form,
+          attachments,
+          env.fromAddressToComplainer,
+        );
+        const receiverEmail = support.createReceiverEmail(
+          form,
+          attachments,
+          env.fromAddressToAbb,
+          env.toAddress,
+        );
 
-        console.log(`Inserting emails to mailbox "${mailbox}"`);
-        await setEmailToMailbox(senderEmail, emailGraph, mailbox);
-        await setEmailToMailbox(receiverEmail, emailGraph, mailbox);
+        console.log(`Inserting emails to mailbox "${env.mailbox}"`);
+        await support.setEmailToMailbox(
+          senderEmail,
+          env.emailGraph,
+          env.mailbox,
+        );
+        await support.setEmailToMailbox(
+          receiverEmail,
+          env.emailGraph,
+          env.mailbox,
+        );
 
         console.log(`Setting form ${form.uuid} to "converted"`);
-        await setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, senderEmail.uuid);
-        await setFormAsConverted(complaintFormGraph, emailGraph, form.uuid, receiverEmail.uuid);
+        await support.setFormAsConverted(
+          env.complaintFormGraph,
+          env.emailGraph,
+          form.uuid,
+          senderEmail.uuid,
+        );
+        await support.setFormAsConverted(
+          env.complaintFormGraph,
+          env.emailGraph,
+          form.uuid,
+          receiverEmail.uuid,
+        );
 
         console.log(`End of processing form ${form.uuid}`);
-      } catch(e) {
-        console.log(`An error has occured while processing form ${form.uuid}: ${e.message}`)
+      } catch (formError) {
+        const errorMsg = `An error has occured while processing form ${form.complaintForm}`;
+        console.error(errorMsg + `:  ${formError.message}`);
+        await support.sendErrorAlert(
+          errorMsg,
+          formError.message,
+          form.complaintForm,
+        );
       }
-    }));
-  } catch (e) {
-    return next(new Error(e.message));
+    }
+  } catch (generalError) {
+    console.error(`An error has occured: ${generalError.message}`);
+    await support.sendErrorAlert(
+      'A general error has occured.',
+      generalError.message,
+    );
   }
-});
+}
 
 app.use(errorHandler);

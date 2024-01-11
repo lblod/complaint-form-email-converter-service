@@ -1,5 +1,15 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
-/node_modules
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+node_modules/
+.log/
 
-package-lock.json
+# Linting
+/.eslintcache
