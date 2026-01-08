@@ -44,6 +44,7 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
 
     SELECT ?complaintForm ?uuid ?name ?contactPersonName ?street ?houseNumber ?addressComplement ?locality ?postalCode ?telephone ?senderEmail ?content ?created
     WHERE {
@@ -58,7 +59,8 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
           schema:postalCode ?postalCode ;
           schema:email ?senderEmail ;
           ext:content ?content ;
-          dct:created ?created .
+          dct:created ?created ;
+          adms:status 'send' .
 
         BIND('-' as ?defaultContactPersonName)
         OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
