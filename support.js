@@ -60,7 +60,7 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
           schema:email ?senderEmail ;
           ext:content ?content ;
           dct:created ?created ;
-          adms:status 'send' .
+          adms:status 'sent' .
 
         BIND('-' as ?defaultContactPersonName)
         OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
