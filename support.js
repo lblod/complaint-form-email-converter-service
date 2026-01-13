@@ -60,7 +60,7 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
           schema:email ?senderEmail ;
           ext:content ?content ;
           dct:created ?created ;
-          adms:status 'sent' .
+          adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> .
 
         BIND('-' as ?defaultContactPersonName)
         OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
