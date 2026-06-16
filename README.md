@@ -9,8 +9,6 @@ database for forms that have not been converted as a failover mechanism.
 
 ## Installation
 
-### Docker-compose snippet
-
 To add the service to your stack, add the following snippet to
 `docker-compose.yml`:
 
