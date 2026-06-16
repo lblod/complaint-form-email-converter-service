@@ -35,18 +35,14 @@ app.post('/delta', async function (req, res) {
 
 async function fetchAndConvertComplaintForms() {
   try {
-    const forms = await support.fetchFormsToBeConverted(env.complaintFormGraph);
+    const forms = await support.fetchFormsToBeConverted();
     if (!forms.length) console.log('No forms found that need to be converted');
     else console.log(`Found ${forms.length} forms to convert`);
 
     for (const form of forms) {
       try {
         console.log(`Fetching attachments for form ${form.uuid}`);
-        const attachments = await support.fetchFormAttachments(
-          env.complaintFormGraph,
-          env.fileGraph,
-          form.uuid,
-        );
+        const attachments = await support.fetchFormAttachments(form.uuid);
 
         console.log(`Creating emails for form ${form.uuid}`);
         const senderEmail = support.createSenderEmail(
@@ -62,30 +58,12 @@ async function fetchAndConvertComplaintForms() {
         );
 
         console.log(`Inserting emails to mailbox "${env.mailbox}"`);
-        await support.setEmailToMailbox(
-          senderEmail,
-          env.emailGraph,
-          env.mailbox,
-        );
-        await support.setEmailToMailbox(
-          receiverEmail,
-          env.emailGraph,
-          env.mailbox,
-        );
+        await support.setEmailToMailbox(senderEmail, env.mailbox);
+        await support.setEmailToMailbox(receiverEmail, env.mailbox);
 
         console.log(`Setting form ${form.uuid} to "converted"`);
-        await support.setFormAsConverted(
-          env.complaintFormGraph,
-          env.emailGraph,
-          form.uuid,
-          senderEmail.uuid,
-        );
-        await support.setFormAsConverted(
-          env.complaintFormGraph,
-          env.emailGraph,
-          form.uuid,
-          receiverEmail.uuid,
-        );
+        await support.setFormAsConverted(form.uuid, senderEmail.uuid);
+        await support.setFormAsConverted(form.uuid, receiverEmail.uuid);
 
         console.log(`End of processing form ${form.uuid}`);
       } catch (formError) {

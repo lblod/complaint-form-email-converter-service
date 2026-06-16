@@ -35,7 +35,7 @@ function parseResult(result) {
 /**
  * Retrieve forms wating to be converted to emails
  */
-export async function fetchFormsToBeConverted(complaintFormGraph) {
+export async function fetchFormsToBeConverted() {
   const result = await mu.query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -90,11 +90,7 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
 /**
  * Retrieve the attachments of a form
  */
-export async function fetchFormAttachments(
-  complaintFormGraph,
-  fileGraph,
-  formUuid,
-) {
+export async function fetchFormAttachments(formUuid) {
   const result = await mu.query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -152,7 +148,7 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
 /**
  * Set emails to mailbox
  */
-export async function setEmailToMailbox(email, emailGraph, mailbox) {
+export async function setEmailToMailbox(email, mailbox) {
   const sendDate = new Date();
   return mu.update(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
@@ -187,12 +183,7 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
 /**
  * Set the form as converted to avoid re-converting it indefinitely
  */
-export async function setFormAsConverted(
-  complaintFormGraph,
-  emailGraph,
-  formUuid,
-  emailUuid,
-) {
+export async function setFormAsConverted(formUuid, emailUuid) {
   return mu.update(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
