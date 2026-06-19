@@ -10,7 +10,6 @@
   },
   "main": "app.js",
   "dependencies": {
-    "@lblod/mu-auth-sudo": "^1.1.0",
     "cron": "^4.4.0",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",

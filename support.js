@@ -1,4 +1,3 @@
-import * as mas from '@lblod/mu-auth-sudo';
 import * as mu from 'mu';
 import * as env from './env';
 import { v4 as uuid } from 'uuid';
@@ -36,8 +35,8 @@ function parseResult(result) {
 /**
  * Retrieve forms wating to be converted to emails
  */
-export async function fetchFormsToBeConverted(complaintFormGraph) {
-  const result = await mas.querySudo(`
+export async function fetchFormsToBeConverted() {
+  const result = await mu.query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX schema: <http://schema.org/>
@@ -45,45 +44,44 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
     PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
     SELECT ?complaintForm ?uuid ?name ?contactPersonName ?street ?houseNumber ?addressComplement ?locality ?postalCode ?telephone ?senderEmail ?content ?created
     WHERE {
-      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
-        ?complaintForm
-          a ext:ComplaintForm ;
-          core:uuid ?uuid ;
-          foaf:name ?name ;
-          schema:streetAddress ?street ;
-          schema:postOfficeBoxNumber ?houseNumber ;
-          schema:addressLocality ?locality ;
-          schema:postalCode ?postalCode ;
-          schema:email ?senderEmail ;
-          ext:content ?content ;
-          dct:created ?created ;
-          adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> .
+      ?complaintForm
+        rdf:type ext:ComplaintForm ;
+        core:uuid ?uuid ;
+        foaf:name ?name ;
+        schema:streetAddress ?street ;
+        schema:postOfficeBoxNumber ?houseNumber ;
+        schema:addressLocality ?locality ;
+        schema:postalCode ?postalCode ;
+        schema:email ?senderEmail ;
+        ext:content ?content ;
+        dct:created ?created ;
+        adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> .
 
-        BIND('-' as ?defaultContactPersonName)
-        OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
-        BIND(
-          coalesce(
-            ?optionalContactPersonName,
-            ?defaultContactPersonName)
-          as ?contactPersonName)
+      BIND('-' as ?defaultContactPersonName)
+      OPTIONAL { ?complaintForm ext:personName ?optionalContactPersonName . }
+      BIND(
+        coalesce(
+          ?optionalContactPersonName,
+          ?defaultContactPersonName)
+        as ?contactPersonName)
 
-        BIND('-' as ?defaultAddressComplement).
-        OPTIONAL { ?complaintForm ext:addressComplement ?optionalAddressComplement . }
-        BIND(
-          coalesce(
-            ?optionalAddressComplement,
-            ?defaultAddressComplement)
-          as ?addressComplement).
+      BIND('-' as ?defaultAddressComplement).
+      OPTIONAL { ?complaintForm ext:addressComplement ?optionalAddressComplement . }
+      BIND(
+        coalesce(
+          ?optionalAddressComplement,
+          ?defaultAddressComplement)
+        as ?addressComplement).
 
-        BIND('-' as ?defaultTelephone).
-        OPTIONAL { ?complaintForm schema:telephone ?optionalTelephone . }
-        BIND(coalesce(?optionalTelephone, ?defaultTelephone) as ?telephone)
+      BIND('-' as ?defaultTelephone).
+      OPTIONAL { ?complaintForm schema:telephone ?optionalTelephone . }
+      BIND(coalesce(?optionalTelephone, ?defaultTelephone) as ?telephone)
 
-        FILTER NOT EXISTS { ?complaintForm ext:isConvertedIntoEmail ?email . }
-      }
+      FILTER NOT EXISTS { ?complaintForm ext:isConvertedIntoEmail ?email . }
     }
   `);
   return parseResult(result);
@@ -92,12 +90,8 @@ export async function fetchFormsToBeConverted(complaintFormGraph) {
 /**
  * Retrieve the attachments of a form
  */
-export async function fetchFormAttachments(
-  complaintFormGraph,
-  fileGraph,
-  formUuid,
-) {
-  const result = await mas.querySudo(`
+export async function fetchFormAttachments(formUuid) {
+  const result = await mu.query(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX schema: <http://schema.org/>
@@ -107,24 +101,23 @@ export async function fetchFormAttachments(
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
     SELECT ?file ?uuid ?filename ?format ?size
     WHERE {
-      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
-        ?complaintForm
-          a ext:ComplaintForm ;
-          core:uuid ${mu.sparqlEscapeString(formUuid)} ;
-          nmo:hasAttachment ?attachment .
-      }
-      GRAPH ${mu.sparqlEscapeUri(fileGraph)} {
-        ?attachment
-          nfo:fileName ?filename ;
-          core:uuid ?uuid .
-        ?file
-          nie:dataSource ?attachment ;
-          dcterms:format ?format ;
-          nfo:fileSize ?size .
-      }
+      ?complaintForm
+        rdf:type ext:ComplaintForm ;
+        core:uuid ${mu.sparqlEscapeString(formUuid)} ;
+        nmo:hasAttachment ?attachment .
+      ?attachment
+        rdf:type nfo:FileDataObject ;
+        nfo:fileName ?filename ;
+        core:uuid ?uuid .
+      ?file
+        rdf:type nfo:FileDataObject ;
+        nie:dataSource ?attachment ;
+        dcterms:format ?format ;
+        nfo:fileSize ?size .
     }
   `);
   return parseResult(result);
@@ -155,19 +148,20 @@ export function createReceiverEmail(form, attachments, fromAddress, toAddress) {
 /**
  * Set emails to mailbox
  */
-export async function setEmailToMailbox(email, emailGraph, mailbox) {
+export async function setEmailToMailbox(email, mailbox) {
   const sendDate = new Date();
-  return mas.updateSudo(`
+  return mu.update(`
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
     INSERT {
-      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
+      GRAPH <http://mu.semte.ch/graphs/application> {
         ${mu.sparqlEscapeUri(`http://data.lblod.info/id/emails/${email.uuid}`)}
-          a nmo:Email ;
+          rdf:type nmo:Email ;
           core:uuid ${mu.sparqlEscapeString(email.uuid)} ;
           nmo:messageFrom ${mu.sparqlEscapeString(email.from)} ;
           nmo:emailTo ${mu.sparqlEscapeString(email.to)} ;
@@ -180,45 +174,35 @@ export async function setEmailToMailbox(email, emailGraph, mailbox) {
       }
     }
     WHERE {
-      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
-        ?mailfolder
-          a nfo:Folder ;
-          nie:title ${mu.sparqlEscapeString(mailbox)} .
-      }
+      ?mailfolder
+        rdf:type nfo:Folder ;
+        nie:title ${mu.sparqlEscapeString(mailbox)} .
     }`);
 }
 
 /**
  * Set the form as converted to avoid re-converting it indefinitely
  */
-export async function setFormAsConverted(
-  complaintFormGraph,
-  emailGraph,
-  formUuid,
-  emailUuid,
-) {
-  return mas.updateSudo(`
+export async function setFormAsConverted(formUuid, emailUuid) {
+  return mu.update(`
     PREFIX schema: <http://schema.org/>
     PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX core: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
     INSERT {
-      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
+      GRAPH <http://mu.semte.ch/graphs/application> {
         ?form ext:isConvertedIntoEmail ?email .
       }
     }
     WHERE {
-      GRAPH ${mu.sparqlEscapeUri(emailGraph)} {
-        ?email
-          a nmo:Email ;
-          core:uuid ${mu.sparqlEscapeString(emailUuid)} .
-      }
-      GRAPH ${mu.sparqlEscapeUri(complaintFormGraph)} {
-        ?form
-          a ext:ComplaintForm ;
-          core:uuid ${mu.sparqlEscapeString(formUuid)} .
-      }
+      ?email
+        rdf:type nmo:Email ;
+        core:uuid ${mu.sparqlEscapeString(emailUuid)} .
+      ?form
+        rdf:type ext:ComplaintForm ;
+        core:uuid ${mu.sparqlEscapeString(formUuid)} .
     }
   `);
 }
@@ -244,20 +228,18 @@ export async function sendErrorAlert(message, detail, reference) {
     PREFIX oslc: <http://open-services.net/ns/core#>
 
     INSERT DATA {
-      GRAPH ${mu.sparqlEscapeUri(env.errorGraph)} {
-        ${mu.sparqlEscapeUri(uri)}
-          rdf:type oslc:Error ;
-          mu:uuid ${mu.sparqlEscapeString(id)} ;
-          dct:subject ${mu.sparqlEscapeString(subject)} ;
-          oslc:message ${mu.sparqlEscapeString(message)} ;
-          dct:created ${mu.sparqlEscapeDateTime(new Date().toISOString())} ;
-          dct:creator ${mu.sparqlEscapeUri(env.creator)} .
-        ${referenceTriple}
-        ${detailTriple}
-      }
+      ${mu.sparqlEscapeUri(uri)}
+        rdf:type oslc:Error ;
+        mu:uuid ${mu.sparqlEscapeString(id)} ;
+        dct:subject ${mu.sparqlEscapeString(subject)} ;
+        oslc:message ${mu.sparqlEscapeString(message)} ;
+        dct:created ${mu.sparqlEscapeDateTime(new Date().toISOString())} ;
+        dct:creator ${mu.sparqlEscapeUri(env.creator)} .
+      ${referenceTriple}
+      ${detailTriple}
     }`;
   try {
-    await mas.updateSudo(insertErrorQuery);
+    await mu.update(insertErrorQuery);
     return uri;
   } catch (e) {
     console.error(
